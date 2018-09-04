@@ -1,0 +1,207 @@
+697<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>My Google Map</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <style>
+
+  /*Definir mapa*/
+    #map{
+      width:100%;
+    }
+
+  /*Definir leyenda*/
+    #mapLegend {
+      background: #fdfdfd;
+      color: #3c4750;
+      padding: 0 10px 0 10px;
+      margin: 10px;
+      font-weight: bold;
+      filter: alpha(opacity=80);
+      opacity: 0.8;
+      border: 2px solid #000;
+}
+    #mapLegend div {
+      height: 40px;
+      line-height: 25px;
+      font-size: 1.2em;
+}
+    #mapLegend div img {
+      float: left;
+      margin-right: 10px;
+}
+    #mapLegend h2 {
+      text-align: center
+}
+  </style>
+</head>
+
+
+<body>
+    <h1>My Google Map</h1>
+    <div id="map" style="height:100%;"></div>
+    <div id="mapLegend">
+    <script>
+
+
+    var velocidad = 1.389;
+    var tiempoquema = 900;
+    var longitudfalla = 0;
+    var latitudfalla = 0;
+    var markers = [];
+    var prev_infowindow = false;
+    var tiempofalla = 0;
+    var distancia = [];
+    var latitudes = [];
+    var marker = 0;
+
+
+
+
+    function time(){
+      var tiempollegarafalla = [];
+      var tiempototal = [];
+      for (f in fallas_nice){
+
+        var rad = function(x) {
+          return x * Math.PI / 180;
+        };
+          var R = 6378137;
+          var dLat = rad(parseFloat(fallas_nice[f]["latitud"])-latitudfalla);
+          var dLong = rad(parseFloat(fallas_nice[f]["longitud"])-longitudfalla);
+          var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(rad(latitudfalla)) * Math.cos(rad(parseFloat(fallas_nice[f]["latitud"]))) *
+            Math.sin(dLong / 2) * Math.sin(dLong / 2);
+          var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          var d = R * c;
+
+      tiempollegarafalla = d/velocidad;
+      tiempototal= tiempofalla+tiempoquema+tiempollegarafalla;
+      if(tiempototal > parseInt(fallas_nice[f]["tiempo"])){
+       markers[f].setIcon(icon6);
+      };
+      prev_infowindow.close();
+    };
+  };
+
+    //Crear el mapa
+      function initMap(){
+        //Map options
+        var options = {
+          zoom:13,
+          center:{lat:39.469765,lng:-0.376424}
+        }
+        //New map
+        var map = new google.maps.Map(document.getElementById('map'), options);
+
+        //Crear la leyenda
+
+        var legend = document.getElementById('mapLegend');
+
+           div= document.createElement('div');
+           div.innerHTML = '<span><img src="https://i.imgur.com/y0o17nl.png"> Sección Especial</span>';
+           legend.appendChild(div);
+
+           var div = document.createElement('div');
+           div.innerHTML = '<span><img src="https://i.imgur.com/Z5CdgZh.png"> Sección 1A</span>';
+           legend.appendChild(div);
+
+           var div = document.createElement('div');
+           div.innerHTML = '<span><img src="https://i.imgur.com/XHsrgEX.png"> Sección 1B</span>';
+           legend.appendChild(div);
+
+           var div = document.createElement('div');
+           div.innerHTML = '<span><img src="https://i.imgur.com/Nwk63Dg.png"> Sección 2A</span>';
+           legend.appendChild(div);
+
+           var div = document.createElement('div');
+           div.innerHTML = '<span><img src="https://i.imgur.com/8ILXZWz.png"> Sección 2B</span>';
+           legend.appendChild(div);
+
+           map.controls[google.maps.ControlPosition.RIGHT_TOP].push(legend);
+
+
+            //Revoger json
+            $(document).ready(function() {
+                $.getJSON("fallas_nice.json", function(json) {
+                  fallas_nice=json;
+                  icon = 'https://i.imgur.com/y0o17nl.png';
+                  icon2 = 'https://i.imgur.com/Z5CdgZh.png';
+                  icon3 = 'https://i.imgur.com/XHsrgEX.png';
+                  icon4 = 'https://i.imgur.com/Nwk63Dg.png';
+                  icon5 = 'https://i.imgur.com/8ILXZWz.png';
+                  icon6 = 'https://i.imgur.com/3wJHiCY.png';
+                    for (f in fallas_nice){
+                      falla = fallas_nice[f];
+
+                      //Definir contenido infowindows
+                      var contentString = '<h2 style="text-align: center;"><span style="text-decoration: underline;"><strong>Sección&nbsp;' + falla["seccion"] + '</strong></span></h2>'+
+                      '<h3 style="text-align: center;"><strong>' + falla["nombre"] + '</strong></h3>' +
+                      '<div style="float: left;"><img style="width: 250px;" src="' + falla["boceto"] + '"alt="Boceto" width="200" height="300" /></div>'+
+                      '<div style="float: right;">'+
+                      '<p>&nbsp;</p>'+
+                      '<p><strong>Fallera mayor: </strong>' + falla["fallera"] + '</p>'+
+                      '<p><strong>Presidente: </strong>' + falla["presidente"] + '</p>'+
+                      '<p><strong>Artista: </strong>' + falla["artista"] + '</p>'+
+                      '<p><strong>Lema: </strong>' + falla["lema"] + '</p>'+
+                      '<p><strong>Año de fundación: </strong>' + falla["año fundacion"] + '</p>'+
+                      '<p><strong>Sector: </strong>' + falla["sector"] + '</p>'+
+                      '<button onclick="time(tiempofalla, latitudfalla, longitudfalla, tiempoquema, velocidad)">Posibilidad ver quemar otra falla</button>'+
+                      '</div>';
+
+                      //Incluir markers con simbología propia
+                       marker = new google.maps.Marker({
+                        position:{lat:falla["latitud"],lng:falla["longitud"]},
+                        map:map
+                      });
+                        if (falla["seccion"] == "ESPECIAL"){
+                        marker.setIcon(icon);
+                        markers.push(marker);
+                        }else if(falla["seccion"] == "1A"){
+                        marker.setIcon(icon2);
+                        markers.push(marker);
+                        }else if(falla["seccion"] == "1B"){
+                        marker.setIcon(icon3);
+                        markers.push(marker);
+                        }else if(falla["seccion"] == "2A"){
+                        marker.setIcon(icon4);
+                        markers.push(marker);
+                        }else if(falla["seccion"] == "2B"){
+                        marker.setIcon(icon5);
+                        markers.push(marker);
+                        };
+
+                    //Definir ventanas de información
+                    var infowindow = new google.maps.InfoWindow({ maxWidth: 1000 });
+                    google.maps.event.addListener(marker,'click', (function(marker,contentString,infowindow,f){
+                      return function(){
+                      tiempofalla = parseInt(fallas_nice[f]["tiempo"]);
+                      latitudfalla = parseFloat(fallas_nice[f]["latitud"]);
+                      longitudfalla = parseFloat(fallas_nice[f]["longitud"]);
+                    infowindow.setContent(contentString);
+                    if(prev_infowindow){
+                      prev_infowindow.close();
+                    };
+                    prev_infowindow = infowindow;
+                    infowindow.open(map,marker);
+                    };
+                  })(marker,contentString,infowindow,f));
+                  };
+                });
+              });
+
+
+
+    }
+  </script>
+  <script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSIygTmKPOc-P6iatKXerrrOwI3XYA2aY&callback=initMap">
+  </script>
+</body>
+</body>
+</html>
